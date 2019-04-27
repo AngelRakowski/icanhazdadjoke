@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 
 /*
  * Create an application using C#, .NET, and optionally ASP.NET that uses the “I can haz dad joke” api (https://icanhazdadjoke.com/api) to display jokes. You are welcome to use more technologies like Angular if you wish but it's not required.
@@ -64,6 +65,7 @@ namespace ICanHazDadJokeConsole
                     string responseBody = "";
 
                     client.DefaultRequestHeaders.Add("Accept", "application/json");
+                    
                     // client.DefaultRequestHeaders.Add("User-Agent", "github.com/AngelRakowski/icanhazdadjoke");
 
                     if (input == 1)
@@ -79,7 +81,14 @@ namespace ICanHazDadJokeConsole
                         Console.WriteLine("\nEnter in a search term:");
 
                         var searchTerm = Console.ReadLine();
-                        responseBody = await client.GetStringAsync(_baseURL+ "/search?term="+searchTerm);
+                        var builder = new UriBuilder(_baseURL + "/search");
+                        var query = HttpUtility.ParseQueryString(builder.Query);
+                        query["term"] = searchTerm;
+                        query["limit"] = "30";
+                        builder.Query = query.ToString();
+                        string url = builder.ToString();
+                        responseBody = await client.GetStringAsync(url);
+
                     }
 
                     Console.WriteLine(responseBody);
