@@ -2,7 +2,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
-
+using Newtonsoft.Json;
 /*
  * Create an application using C#, .NET, and optionally ASP.NET that uses the “I can haz dad joke” api (https://icanhazdadjoke.com/api) to display jokes. You are welcome to use more technologies like Angular if you wish but it's not required.
 
@@ -17,8 +17,8 @@ namespace ICanHazDadJokeConsole
 {
     public class DadJoke
     {
-        string ID;
-        string Joke;
+        public string ID;
+        public string Joke;
     }
 
     class Program
@@ -45,6 +45,7 @@ namespace ICanHazDadJokeConsole
             {
                  await GetDadJokes(convertedInput);
             }).GetAwaiter().GetResult();
+
             Console.ReadKey();
         }
 
@@ -70,10 +71,15 @@ namespace ICanHazDadJokeConsole
 
                     if (input == 1)
                     {
+                        while(true)
+                        {
+                            responseBody = await client.GetStringAsync(_baseURL);
+                            DadJoke dadJoke = JsonConvert.DeserializeObject<DadJoke>(responseBody);
+                            Console.WriteLine(dadJoke.Joke);
+                            await Task.Delay(10000);
+                        }
                         
-                        responseBody = await client.GetStringAsync(_baseURL);
 
-                       
 
                     }
                     else
@@ -89,9 +95,9 @@ namespace ICanHazDadJokeConsole
                         string url = builder.ToString();
                         responseBody = await client.GetStringAsync(url);
 
+                        Console.WriteLine(responseBody);
                     }
 
-                    Console.WriteLine(responseBody);
                 }
                 catch (HttpRequestException e)
                 {
