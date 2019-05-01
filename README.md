@@ -1,10 +1,8 @@
 "# icanhazdadjoke" 
 
- REQUIREMENTS
- * 
- * Create an application using C#, .NET, and optionally ASP.NET that uses the “I can haz dad joke” api 
- * (https://icanhazdadjoke.com/api) to display jokes.
- * You are welcome to use more technologies like Angular if you wish but it's not required.
+REQUIREMENTS
+
+Create an application using C#, .NET, and optionally ASP.NET that uses the “I can haz dad joke” api (https://icanhazdadjoke.com/api) to display jokes. You are welcome to use more technologies like Angular if you wish but it's not required.
 
 There should be two modes the user can choose between:
 
