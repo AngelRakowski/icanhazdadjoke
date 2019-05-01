@@ -15,7 +15,7 @@ using DadJokesSettings = ICanHazDadJokeConsole.Model.DadJokesSettings;
 namespace ICanHazDadJokeConsole.Test
 {
     [TestClass]
-    public class UnitTest1
+    public class ICanHazDadJokeTests
     {
         [TestMethod]
         public async Task GetASingleDadJokeTest()
@@ -125,15 +125,17 @@ namespace ICanHazDadJokeConsole.Test
 
                     foreach (DadJoke dadJoke in dadJokes.Results)
                     {
-                        if (dadJoke.Joke.Length < 10)
+                        int wordCount = Controller.CountWords(dadJoke.Joke);
+
+                        if (wordCount < settings._shortJokeLimit)
                         {
                             shortJokes.Add(dadJoke);
                         }
-                        else if (dadJoke.Joke.Length > 10 && dadJoke.Joke.Length < 20)
+                        else if (wordCount > settings._shortJokeLimit && wordCount < settings._mediumJokeLimit)
                         {
                             mediumJokes.Add(dadJoke);
                         }
-                        else if (dadJoke.Joke.Length >= 20)
+                        else
                         {
                             longJokes.Add(dadJoke);
                         }
@@ -164,6 +166,17 @@ namespace ICanHazDadJokeConsole.Test
                 }
 
             }
+
         }
+
+        [TestMethod]
+        // Found on https://www.dotnetperls.com/word-count
+        public void CountWords()
+        {
+            string s = @"The quick brown fox jumped over the lazy dog.  And then he ran over my mother.";
+            MatchCollection collection = Regex.Matches(s, @"[\S]+");
+            Assert.IsTrue(collection.Count == 16);
+        }
+
     }
 }
