@@ -26,6 +26,8 @@ namespace ICanHazDadJokeConsole.Model
 
         }
 
+       
+
         public string BaseURL
         {
             get { return _baseURL; }

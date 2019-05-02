@@ -16,6 +16,12 @@ namespace ICanHazDadJokeConsole
         private DadJokesSettings _settings;
         private string _responseBody;
 
+        public DadJokesService()
+        {
+
+            // set up the DadJokesSettings
+            _settings = new DadJokesSettings();
+        }
 
         public DadJokesSettings jokesSettings
         {
@@ -24,8 +30,6 @@ namespace ICanHazDadJokeConsole
 
         public void InitializeClient(HttpClient client)
         {
-            // set up the DadJokesSettings
-            _settings = new DadJokesSettings();
 
             foreach (var kv in _settings.clientSettings)
             {
@@ -33,26 +37,7 @@ namespace ICanHazDadJokeConsole
             }
         }
 
-        public async Task GetDadJokes(int input, CancellationToken token)
-        {
-            if (input == 1)
-            {
-                while (!token.IsCancellationRequested)
-                {
-                    await RepeatDadJokes();
-                }
-            }
-            else
-            {
-                  Console.WriteLine("\nEnter in a search term.");
-                    _settings.SearchTerm = Console.ReadLine();
-
-                    DadJokes resultingDadJokes = await SearchDadJokes();
-
-                    GroupDadJokesByLength(resultingDadJokes, _settings);
-                 
-            }
-        }
+       
         /*
 * Function: FormatAndDisplayDadJokes(IList<DadJoke>)
 * Per the requirements, if using a search term with the API, the joke must display with the search term
@@ -80,21 +65,30 @@ namespace ICanHazDadJokeConsole
          * This function is called when Option 1 is selected from the UI.  It hits the API, displays the joke,
          * waits 10 seconds, and then repeats the process.
          * */
-        public async Task RepeatDadJokes()
+        public async Task RepeatDadJokes(CancellationTokenSource source)
         {
             try
             {
                 using (HttpClient client = new HttpClient())
                 {
+                    InitializeClient(client);
 
-                    _responseBody = await client.GetStringAsync(_settings.BaseURL);
-                    DadJoke dadJoke = JsonConvert.DeserializeObject<DadJoke>(_responseBody);
-                    Console.WriteLine(dadJoke.Joke);
-                    await Task.Delay(_settings.JokesDelay);
+                    while(!source.IsCancellationRequested)
+                    { 
+                        _responseBody = await client.GetStringAsync(_settings.BaseURL);
+                        DadJoke dadJoke = JsonConvert.DeserializeObject<DadJoke>(_responseBody);
+                        Console.WriteLine(dadJoke.Joke);
+                        await Task.Delay(_settings.JokesDelay);
+                    }
+
                 }
             }
 
-                catch { }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception: " + e);
+            }
+            
         }
 
         /* Function: SearchDadJokes(HttpClient, string, DadJokesSettings)
@@ -103,24 +97,34 @@ namespace ICanHazDadJokeConsole
         * It hits the API and returns a "page" of DadJokes given the limit set in the _settings.
         * It then binds the response to the DadJokes class and returns that for us to use in later functions.
         * */
-        public async Task<DadJokes> SearchDadJokes()
+        public async Task SearchDadJokes()
         {
-            using (HttpClient client = new HttpClient())
+            try
             {
-                string responseBody = "";
-                // Build the parameterized query then spawns a thread to return the responseBody as a string in an asyhonchronous operation. 
-                var builder = new UriBuilder(_settings.BaseURL + "/search");
-                var query = HttpUtility.ParseQueryString(builder.Query);
-                query.Add("term", _settings.SearchTerm);
-                query.Add("limit", _settings.JokesPerPage);
-                builder.Query = query.ToString();
-                string url = builder.ToString();
-                responseBody = await client.GetStringAsync(url);
+                using (HttpClient client = new HttpClient())
+                {
+                    InitializeClient(client);
 
-                // Bind the responseBody to our DadJokes object
-                DadJokes dadJokes = JsonConvert.DeserializeObject<DadJokes>(responseBody);
+                    string responseBody = "";
+                    // Build the parameterized query then spawns a thread to return the responseBody as a string in an asyhonchronous operation. 
+                    var builder   = new UriBuilder(_settings.BaseURL + "/search");
+                    var query     = HttpUtility.ParseQueryString(builder.Query);
+                    query.Add("term", _settings.SearchTerm);
+                    query.Add("limit", _settings.JokesPerPage);
+                    builder.Query = query.ToString();
+                    string url    = builder.ToString();
+                    responseBody  = await client.GetStringAsync(url);
 
-                return dadJokes;
+                    // Bind the responseBody to our DadJokes object
+                    DadJokes dadJokes = JsonConvert.DeserializeObject<DadJokes>(responseBody);
+
+                    GroupDadJokesByLength(dadJokes);
+
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception: " + e);
             }
 
         }
@@ -132,7 +136,7 @@ namespace ICanHazDadJokeConsole
          * Note: during  my testing I was not able to find jokes with a length under 20 so they 
          * all came out under Long Jokes
          */
-        public void GroupDadJokesByLength(DadJokes dadJokes, DadJokesSettings _settings)
+        private void GroupDadJokesByLength(DadJokes dadJokes)
         {
             IList<DadJoke> shortJokes = new List<DadJoke>();
             IList<DadJoke> mediumJokes = new List<DadJoke>();

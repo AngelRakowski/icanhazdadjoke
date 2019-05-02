@@ -29,6 +29,12 @@ and the matching jokes grouped by length: short (<10 words), medium (<20 words),
 
 namespace ICanHazDadJokeConsole
 {
+    public enum DadJokesOption
+    {
+        RepeatDadJokes = 1,
+        SearchDadJokes
+    }
+
     public class Program
     {
 
@@ -42,7 +48,7 @@ namespace ICanHazDadJokeConsole
             int convertedInput = Convert.ToInt32(input);
 
             // If the user enters in an input other than 1 or 2, it will keep asking them to re-enter it
-            while (convertedInput != 1 && convertedInput != 2)
+            while ( !convertedInput.Equals(1) && !convertedInput.Equals(2))
             {
                 Console.WriteLine("\nInvalid input.\n");
                 DisplayInstructions();
@@ -50,22 +56,37 @@ namespace ICanHazDadJokeConsole
                 convertedInput = Convert.ToInt32(input);
             }
 
+
             DadJokesService service = new DadJokesService();
-            CancellationTokenSource source = new CancellationTokenSource();
+            CancellationTokenSource source = new CancellationTokenSource(); 
 
             CancellationToken token = source.Token;
-            Task t = Task.Run(async () =>
-            {
-                await service.GetDadJokes(convertedInput, token);
-            }, token);
 
-           
+            Task t=null;
+            if (convertedInput.Equals(2))
+            {
+                Console.WriteLine("Enter in a search term.");
+
+                service.jokesSettings.SearchTerm = Console.ReadLine();
+                t = Task.Run(async () =>
+                {
+                    await service.SearchDadJokes();
+                }, token);
+            }
+            else
+            {   t = Task.Run(async () =>
+                {
+                    await service.RepeatDadJokes(source);
+                }, token);
+            }
 
             Console.WriteLine();
             Console.WriteLine("Press any key to exit.");
             Console.ReadKey();
+           
 
             source.Cancel();
+            Console.WriteLine("Cleaning up threads.  Please wait.");
             Task.WaitAll(t);
         }
 
