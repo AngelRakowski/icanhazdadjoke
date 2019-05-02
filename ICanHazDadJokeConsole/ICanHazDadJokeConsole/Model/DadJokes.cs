@@ -10,7 +10,11 @@ namespace ICanHazDadJokeConsole.Model
 
     public class DadJokes
     {
-        public IList<DadJoke> Results;
+        public IList<DadJoke> Results
+        {
+            get;
+            set;
+        }
     }
 
 }

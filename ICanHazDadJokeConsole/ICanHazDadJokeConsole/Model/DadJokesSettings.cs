@@ -8,24 +8,48 @@ namespace ICanHazDadJokeConsole.Model
      */
     public class DadJokesSettings
     {
-        public Dictionary<string, string> _clientSettings;
-        public readonly int _delayBetweenJokes = 10000;             // defined per requirements (10 seconds)
-        public Dictionary<string, string> _querySettings;
-        public readonly string _jokesPerPageLimit = @"30";          // defined per requirements (30 jokes per page)
-        public readonly int _shortJokeLimit = 10;
-        public readonly int _mediumJokeLimit = 20;
-
+        public Dictionary<string, string> clientSettings;
+        private  int _delayBetweenJokes = 10000;             // defined per requirements (10 seconds)
+        public Dictionary<string, string> querySettings;
+        private string _jokesPerPageLimit = @"30";          // defined per requirements (30 jokes per page)
+        private int _shortJokeLimit = 10;
+        private int _mediumJokeLimit = 20;
+        private string _baseURL= @"https://icanhazdadjoke.com";
 
         public DadJokesSettings()
         {
-            _clientSettings = new Dictionary<string, string>();
-            _clientSettings.Add("Accept", "application/json");
+            clientSettings = new Dictionary<string, string>();
+            clientSettings.Add("Accept", "application/json");
             
             // Per the request from the documentation for ICanHazDadJoke API, I added a custom user-agent
-            _clientSettings.Add("User-Agent", @"My Library (https://github.com/AngelRakowski/icanhazdadjoke)");
+            clientSettings.Add("User-Agent", @"My Library (https://github.com/AngelRakowski/icanhazdadjoke)");
+
         }
 
-        public static readonly string _baseURL = @"https://icanhazdadjoke.com";
-        public static string _searchTerm;
+        public string BaseURL
+        {
+            get { return _baseURL; }
+        } 
+        public string SearchTerm { get; set; }
+        
+        public int ShortJokeLimit
+        {
+            get { return _shortJokeLimit; }
+        }
+
+        public int MediumJokeLimit
+        {
+            get { return _mediumJokeLimit; }
+        }
+
+        public string JokesPerPage
+        {
+            get { return _jokesPerPageLimit; }
+        }
+
+        public int JokesDelay
+        {
+            get { return _delayBetweenJokes; }
+        }
     }
 }
