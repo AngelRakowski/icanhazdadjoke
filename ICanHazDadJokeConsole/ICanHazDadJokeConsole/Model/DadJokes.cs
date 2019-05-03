@@ -14,8 +14,11 @@ namespace ICanHazDadJokeConsole.Model
         {
             Results = new List<DadJoke>();
         }
+
+        // List of DadJokes returned from a search call to the API
         public IList<DadJoke> Results { get; set; }
 
+        // Http status code
         public string Status { get; set; }
        
     }

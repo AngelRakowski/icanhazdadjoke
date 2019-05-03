@@ -2,8 +2,6 @@
 using System.Threading.Tasks;
 using System.Threading;
 
-
-
 /* REQUIREMENTS
  * 
  * Create an application using C#, .NET, and optionally ASP.NET that uses the “I can haz dad joke” api 
@@ -59,6 +57,7 @@ namespace ICanHazDadJokeConsole
                 Console.WriteLine("Enter in a search term.");
                 service.JokesSettings.SearchTerm = Console.ReadLine();
 
+                // kick off thread to Search Dad Jokes
                 t = Task.Run(async () =>
                 {
                     await service.SearchDadJokes();
@@ -66,6 +65,7 @@ namespace ICanHazDadJokeConsole
             }
             else
             {
+                // kick off thread to poll API every 10 seconds
                 t = Task.Run(async () =>
                 {
                     await service.RepeatDadJokes(source);
