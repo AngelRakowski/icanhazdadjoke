@@ -1,14 +1,6 @@
 ﻿using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Web;
-using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using DadJoke = ICanHazDadJokeConsole.Model.DadJoke;
-using DadJokes = ICanHazDadJokeConsole.Model.DadJokes;
-using DadJokesSettings = ICanHazDadJokeConsole.Model.DadJokesSettings;
 
 
 
@@ -45,48 +37,54 @@ namespace ICanHazDadJokeConsole
 
             var input = Console.ReadLine();
 
-            int convertedInput = Convert.ToInt32(input);
-
-            // If the user enters in an input other than 1 or 2, it will keep asking them to re-enter it
-            while ( !convertedInput.Equals(1) && !convertedInput.Equals(2))
+            // Only accept 1 or 2 from the user
+            while (!input.Equals("1") && !input.Equals("2"))
             {
-                Console.WriteLine("\nInvalid input.\n");
-                DisplayInstructions();
-                input = Console.ReadLine();
-                convertedInput = Convert.ToInt32(input);
+                input = PromptForValidInput();
             }
-
-
+            
+            int convertedInput = Convert.ToInt32(input);
+            
             DadJokesService service = new DadJokesService();
-            CancellationTokenSource source = new CancellationTokenSource(); 
 
+            // We use a CancellationTokenSource to gracefully handle threading and closing of tasks
+            // especially when the user enters a key to exit the program
+            CancellationTokenSource source = new CancellationTokenSource(); 
             CancellationToken token = source.Token;
 
             Task t=null;
-            if (convertedInput.Equals(2))
+            Console.WriteLine("Kicking off task");
+            if (convertedInput.Equals((int)DadJokesOption.SearchDadJokes))
             {
                 Console.WriteLine("Enter in a search term.");
+                service.JokesSettings.SearchTerm = Console.ReadLine();
 
-                service.jokesSettings.SearchTerm = Console.ReadLine();
                 t = Task.Run(async () =>
                 {
                     await service.SearchDadJokes();
                 }, token);
             }
             else
-            {   t = Task.Run(async () =>
+            {
+                t = Task.Run(async () =>
                 {
                     await service.RepeatDadJokes(source);
                 }, token);
             }
 
+            // We return here immediately after kicking off our thread 
             Console.WriteLine();
             Console.WriteLine("Press any key to exit.");
+            
+            // Wait for key input.
             Console.ReadKey();
            
-
+            // send a Cancel request
             source.Cancel();
+
             Console.WriteLine("Cleaning up threads.  Please wait.");
+
+            // wait for all tasks running to complete their execution
             Task.WaitAll(t);
         }
 
@@ -100,7 +98,12 @@ namespace ICanHazDadJokeConsole
             Console.WriteLine("Please enter 2 to display the first 30 jokes containing a search term and grouped by length.");
         }
 
-       
-
+        static string PromptForValidInput()
+        {
+            Console.WriteLine("\nInvalid input.\n");
+            DisplayInstructions();
+            var input = Console.ReadLine();
+            return input;
+        }
     }
 }

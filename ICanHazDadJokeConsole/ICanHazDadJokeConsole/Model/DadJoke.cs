@@ -12,5 +12,11 @@ namespace ICanHazDadJokeConsole.Model
             get;
             set;
         }
+
+        public string Status
+        {
+            get;
+            set;
+        }
     }
 }

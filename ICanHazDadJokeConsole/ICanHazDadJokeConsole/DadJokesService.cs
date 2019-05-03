@@ -11,6 +11,9 @@ using System.Text.RegularExpressions;
 
 namespace ICanHazDadJokeConsole
 {
+    /// <summary>
+    /// This service handles all the code regarding the DadJokes classes
+    /// </summary>
     public class DadJokesService
     {
         private DadJokesSettings _settings;
@@ -18,19 +21,17 @@ namespace ICanHazDadJokeConsole
 
         public DadJokesService()
         {
-
-            // set up the DadJokesSettings
+            // instantiate DadJokesSettings
             _settings = new DadJokesSettings();
         }
 
-        public DadJokesSettings jokesSettings
+        public DadJokesSettings JokesSettings
         {
             get { return _settings; }
         }
 
         public void InitializeClient(HttpClient client)
         {
-
             foreach (var kv in _settings.clientSettings)
             {
                 client.DefaultRequestHeaders.Add(kv.Key, kv.Value);
@@ -39,22 +40,22 @@ namespace ICanHazDadJokeConsole
 
        
         /*
-* Function: FormatAndDisplayDadJokes(IList<DadJoke>)
-* Per the requirements, if using a search term with the API, the joke must display with the search term
-* highlighted in some way. In this case, I chose to capitalize all the letters in the word.  We do it with 
-* all instances of the whole word using regular expressions.
-*/
+        * Function: FormatAndDisplayDadJokes(IList<DadJoke>)
+        * Per the requirements, if using a search term with the API, the joke must display with the search term
+        * highlighted in some way. In this case, I chose to capitalize all the letters in the word.  We do it with 
+        * all instances of the whole word using regular expressions.
+        */
         public void FormatAndDisplayDadJokes(IList<DadJoke> jokes)
         {
 
             // We only want to match on the whole word
             string searchTerm = @"\b" + _settings.SearchTerm + @"\b";
+
             foreach (DadJoke dadJoke in jokes)
             {
                 if (Regex.IsMatch(dadJoke.Joke, searchTerm))
                 {
                     string formattedJoke = Regex.Replace(dadJoke.Joke, searchTerm, _settings.SearchTerm.ToUpper());
-
                     Console.WriteLine(formattedJoke);
                 }
 
@@ -77,7 +78,12 @@ namespace ICanHazDadJokeConsole
                     { 
                         _responseBody = await client.GetStringAsync(_settings.BaseURL);
                         DadJoke dadJoke = JsonConvert.DeserializeObject<DadJoke>(_responseBody);
-                        Console.WriteLine(dadJoke.Joke);
+
+                        if (dadJoke.Status.Equals("200") && dadJoke.Joke.Length != 0)
+                        {
+                            Console.WriteLine(dadJoke.Joke);
+                        }
+
                         await Task.Delay(_settings.JokesDelay);
                     }
 
@@ -87,6 +93,7 @@ namespace ICanHazDadJokeConsole
             catch (Exception e)
             {
                 Console.WriteLine("Exception: " + e);
+                Console.WriteLine("Press any key to exit.");
             }
             
         }
@@ -117,14 +124,22 @@ namespace ICanHazDadJokeConsole
 
                     // Bind the responseBody to our DadJokes object
                     DadJokes dadJokes = JsonConvert.DeserializeObject<DadJokes>(responseBody);
+                   if (dadJokes.Status.Equals("200") &&  dadJokes.Results.Count != 0)
+                    {
+                        GroupDadJokesByLength(dadJokes);
+                    }
+                    else if (dadJokes.Results.Count != 0)
+                    {
+                        Console.WriteLine("Your search terms resulted in no jokes.");
+                    }
 
-                    GroupDadJokesByLength(dadJokes);
-
+                    Console.WriteLine("Press any key to exit.");
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("Exception: " + e);
+                Console.WriteLine("Press any key to exit.");
             }
 
         }
@@ -180,6 +195,11 @@ namespace ICanHazDadJokeConsole
             }
         }
 
+        /// <summary>
+        /// Counts the number of words using regular expression
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public int CountWords(string s)
         {
             MatchCollection collection = Regex.Matches(s, @"[\S]+");

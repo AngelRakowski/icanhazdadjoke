@@ -17,16 +17,17 @@ namespace ICanHazDadJokeConsole.Test
     [TestClass]
     public class ICanHazDadJokeTests
     {
+        /// <summary>
+        /// This test method hits the ICanHazDadJoke API and binds it to the DadJoke class.  We assert that 
+        /// we get a response and that the bound DadJoke is not null.
+        /// </summary>
         [TestMethod]
         public async Task GetASingleDadJokeTest()
         {
-            using (HttpClient client = new HttpClient())
-            {
-                string responseBody = "";
+            string responseBody = "";
 
-                try
-                {
-                    // set up the DadJokesSettings
+               using (HttpClient client = new HttpClient())
+                {// set up the DadJokesSettings
                     DadJokesSettings settings = new DadJokesSettings();
                     foreach (var dadJokeKeyPair in settings.clientSettings)
                     {
@@ -39,69 +40,33 @@ namespace ICanHazDadJokeConsole.Test
                     DadJoke dadJoke = JsonConvert.DeserializeObject<DadJoke>(responseBody);
                     Assert.IsNotNull(dadJoke);
                 }
+          
 
-                catch(HttpRequestException)
-                {
-                    throw;
-                }
 
-            }
         }
 
+        /// <summary>
+        /// This test method uses the Search function of the ICanHazDadJoke API, passes a searchTerm as a parameter
+        /// to the query
+        /// </summary>
+        /// <Asserts>Response from API</Asserts>
+        /// <Asserts>DadJokes search result is bound properly and not null</Asserts>
+        /// 
         [TestMethod]
-        public async Task SearchDadJokesTest()
+        public async Task SearchDadJokesBadInputTest()
         {
-
-            using (HttpClient client = new HttpClient())
-            {
-                try
+                using (HttpClient client = new HttpClient())
                 {
-
                     DadJokesService service = new DadJokesService();
 
-                    var settings = service.jokesSettings;
+                    var settings = service.JokesSettings;
                     string responseBody = "";
 
                     foreach (var dadJokeKeyPair in settings.clientSettings)
                     {
                         client.DefaultRequestHeaders.Add(dadJokeKeyPair.Key, dadJokeKeyPair.Value);
                     }
-                    settings.SearchTerm = "movie";
-
-                    // Build the parameterized query then spawns a thread to return the responseBody as a string in an asyhonchronous operation. 
-                    var builder = new UriBuilder(settings.BaseURL + "/search");
-                    var query = HttpUtility.ParseQueryString(builder.Query);
-                    query.Add("term", settings.SearchTerm);
-                    query.Add("limit", settings.JokesPerPage);
-                    builder.Query = query.ToString();
-                    string url = builder.ToString();
-                    responseBody = await client.GetStringAsync(url);
-
-                    Assert.IsTrue(responseBody.Length != 0);
-
-                    DadJokes dadJoke = JsonConvert.DeserializeObject<DadJokes>(responseBody);
-                    Assert.IsNotNull(dadJoke);
-                }
-
-                catch (HttpRequestException)
-                {
-                    throw;
-                }
-            }
-        }
-
-        [TestMethod]
-        public async Task GroupDadJokesTest()
-        {
-            using (HttpClient client = new HttpClient())
-            {
-                string responseBody = "";
-
-                try
-                {
-                    DadJokesService service = new DadJokesService();
-                    var settings = service.jokesSettings;
-                    settings.SearchTerm = "the";
+                    settings.SearchTerm = "sdsdfadf";
 
                     // Build the parameterized query then spawns a thread to return the responseBody as a string in an asyhonchronous operation. 
                     var builder = new UriBuilder(settings.BaseURL + "/search");
@@ -115,11 +80,79 @@ namespace ICanHazDadJokeConsole.Test
                     Assert.IsTrue(responseBody.Length != 0);
 
                     DadJokes dadJokes = JsonConvert.DeserializeObject<DadJokes>(responseBody);
+                    Assert.IsTrue(dadJokes.Results.Count==0);
+                }
+            
+
+           
+        }
+
+        [TestMethod]
+        public async Task SearchDadJokesInputTest()
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                DadJokesService service = new DadJokesService();
+
+                var settings = service.JokesSettings;
+                string responseBody = "";
+
+                foreach (var dadJokeKeyPair in settings.clientSettings)
+                {
+                    client.DefaultRequestHeaders.Add(dadJokeKeyPair.Key, dadJokeKeyPair.Value);
+                }
+                settings.SearchTerm = "have";
+
+                // Build the parameterized query then spawns a thread to return the responseBody as a string in an asyhonchronous operation. 
+                var builder = new UriBuilder(settings.BaseURL + "/search");
+                var query = HttpUtility.ParseQueryString(builder.Query);
+                query.Add("term", settings.SearchTerm);
+                query.Add("limit", settings.JokesPerPage);
+                builder.Query = query.ToString();
+                string url = builder.ToString();
+                responseBody = await client.GetStringAsync(url);
+
+                Assert.IsTrue(responseBody.Length != 0);
+
+                DadJokes dadJokes = JsonConvert.DeserializeObject<DadJokes>(responseBody);
+                Assert.IsNotNull(dadJokes.Results);
+            }
+
+
+
+        }
+
+        [TestMethod]
+        public void GroupDadJokesTest()
+        {
+            using (HttpClient client = new HttpClient())
+            {
+               
+                    DadJokesService service = new DadJokesService();
+                    var settings = service.JokesSettings;
+                  
+                    DadJokes dadJokes = new DadJokes();
+                    DadJoke joke1 = new DadJoke();
+                    joke1.Joke = @"Why do bears have hairy coats? Fur protection.";
+                    dadJokes.Results.Add(joke1);
+
+                    DadJoke joke2 = new DadJoke();
+                    joke2.Joke = @"What time did the man go to the dentist? Tooth hurt-y.";
+                    dadJokes.Results.Add(joke2);
+
+                    DadJoke joke3 = new DadJoke();
+                    joke3.Joke = @"What did the left eye say to the right eye? Between us, something smells!";
+                    dadJokes.Results.Add(joke3);
+
+                    DadJoke joke4 = new DadJoke();
+                    joke4.Joke = @"To the guy who invented zero... thanks for nothing.";
+                    dadJokes.Results.Add(joke4);
+
                     Assert.IsNotNull(dadJokes);
 
-                    IList<DadJoke> shortJokes = new List<DadJoke>();
+                    IList<DadJoke> shortJokes  = new List<DadJoke>();
                     IList<DadJoke> mediumJokes = new List<DadJoke>();
-                    IList<DadJoke> longJokes = new List<DadJoke>();
+                    IList<DadJoke> longJokes   = new List<DadJoke>();
 
                     foreach (DadJoke dadJoke in dadJokes.Results)
                     {
@@ -139,29 +172,10 @@ namespace ICanHazDadJokeConsole.Test
                         }
                     }
 
-                    if (shortJokes.Count != 0)
-                    {
-                        Console.WriteLine("Short jokes");
-                        service.FormatAndDisplayDadJokes(shortJokes);
-                    }
-                    if (mediumJokes.Count != 0)
-                    {
-                        Console.WriteLine("Medium jokes");
-                        service.FormatAndDisplayDadJokes(mediumJokes);
-                    }
-                    if (longJokes.Count != 0)
-                    {
-                        Console.WriteLine("Long jokes");
-                        service.FormatAndDisplayDadJokes(longJokes);
-                    }
-
                     Assert.IsTrue(shortJokes.Count != 0 || mediumJokes.Count != 0 || longJokes.Count != 0);
-                }
+                
 
-                catch (HttpRequestException)
-                {
-                    throw;
-                }
+              
             }
 
         }
